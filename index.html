@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dvary Services</title>
+
+    <style>
+        :root {
+            --bg: #0a0e14;
+            --card: rgba(255, 255, 255, 0.05);
+            --accent: #00f2ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+
+        .glow-text {
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse { from { opacity: .6; } to { opacity: 1; } }
+
+        .glass-card {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            margin-bottom: 20px;
+        }
+
+        .profile-img {
+            width: 90px; height: 90px; border-radius: 50%;
+            border: 3px solid var(--accent);
+            display: block; margin: auto;
+        }
+
+        .bar { height: 20px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        .bar-fill { 
+            height: 100%; width: 0%; 
+            background: linear-gradient(90deg, var(--accent), #7000ff);
+            transition: 1s;
+            animation: glow-bar 2s infinite alternate;
+        }
+        @keyframes glow-bar { from { filter: brightness(1); } to { filter: brightness(1.5); } }
+
+        .service { background: #111; padding: 15px; border-radius: 15px; margin-top: 10px; }
+        .btn {
+            display: inline-block; background: var(--accent); color: black;
+            padding: 10px 20px; border-radius: 15px; text-decoration: none;
+            font-weight: bold; margin-top: 10px; text-align: center; width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <input style="width:100%; padding:12px; border-radius:20px; background:#222; border:none; color:white; margin-bottom:20px;" type="text" placeholder="🔍 Tafuta huduma...">
+
+    <!-- Profile -->
+    <div class="glass-card" style="text-align:center;">
+        <img src="https://i.pravatar.cc/150?u=Dvary" class="profile-img">
+        <h2 class="glow-text">Abdallah Manyama</h2>
+        <p>IT Developer & Instructor</p>
+    </div>
+
+    <!-- Battery Status -->
+    <div class="glass-card">
+        <div style="display:flex; justify-content:space-between; font-weight:bold;">
+            <span>🔋 CHAJI LIVE</span>
+            <span id="pct">--%</span>
+        </div>
+        <div class="bar">
+            <div id="fill" class="bar-fill"></div>
+        </div>
+    </div>
+
+    <!-- Services -->
+    <div class="glass-card">
+        <h2 class="glow-text">🚀 Huduma Zetu</h2>
+        <div class="service">
+            <h3>📈 Boost Followers</h3>
+            <p>Instagram, TikTok, Facebook na Telegram.</p>
+            <a class="btn" href="https://store.pesapal.com/lipiaapa">Lipia Sasa</a>
+        </div>
+        <div class="service">
+            <h3>🤖 Telegram Bot</h3>
+            <p>Bot za biashara na groups.</p>
+            <a class="btn" href="https://store.pesapal.com/lipiaapa">Lipia Sasa</a>
+        </div>
+    </div>
+
+    <!-- Channel Section -->
+    <div class="glass-card">
+        <h2 class="glow-text">📢 Dvary Channel</h2>
+        <p style="margin: 10px 0;">Jiunge nasi kwa updates za kila siku:</p>
+        <a class="btn" href="https://whatsapp.com/channel/0029VbCRC9b5fM5cruU8PF2M" target="_blank">
+            👀 View Channel
+        </a>
+    </div>
+
+    <script>
+        if(navigator.getBattery){
+            navigator.getBattery().then(battery => {
+                function updateBattery(){
+                    let level = Math.round(battery.level * 100);
+                    document.getElementById("pct").innerHTML = level + "%";
+                    document.getElementById("fill").style.width = level + "%";
+                }
+                updateBattery();
+                battery.addEventListener("levelchange", updateBattery);
+            });
+        }
+    </script>
+
+</body>
+</html>
+
