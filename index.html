@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>:: NULL_ACADEMY ::</title>
+    <style>
+        :root { --neon: #00f2ff; --bg: #0a0a0c; --card: #16161a; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 20px; }
+        .card { background: var(--card); border: 1px solid #333; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .btn { background: var(--neon); color: #000; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .del-btn { background: #ff4444; color: white; padding: 8px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 5px; }
+        input, textarea { width: 90%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+        video { width: 100%; border-radius: 8px; margin-top: 10px; }
+        #admin { display: none; }
+        #loginOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); padding: 40px; text-align: center; z-index: 100; }
+        #loginOverlay.active { display: block; }
+        .info-box { border-left: 4px solid var(--neon); padding: 10px; background: #1a1a1f; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<header style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--neon); padding-bottom:10px;">
+    <h1>NULL_ACADEMY</h1>
+    <div>
+        <a href="https://whatsapp.com/channel/0029VbCRC9b5fM5cruU8PF2M" target="_blank" class="btn" style="width:auto; margin-right:10px; padding: 8px 15px;">📡 JOIN CHANNEL</a>
+        <button class="btn" style="width:auto; padding: 8px 15px;" onclick="document.getElementById('loginOverlay').classList.add('active')">🔐 ADMIN</button>
+    </div>
+</header>
+
+<main>
+    <section class="info-box">
+        <h3>🔍 Cyber Search</h3>
+        <p>NULL_ACADEMY: Tunatoa elimu ya teknolojia, udukuzi wa kimaadili (Ethical Hacking), na utatuzi wa changamoto za kidijitali. Jifunze usalama mtandaoni kwa ufanisi.</p>
+    </section>
+
+    <section id="student">
+        <h2>🎥 VIDEOS</h2>
+        <div id="videoList">Loading...</div>
+        <h2>📝 NOTES</h2>
+        <div id="notesList">Loading...</div>
+    </section>
+
+    <section id="admin" class="card">
+        <h2>⚙️ ADMIN DASHBOARD</h2>
+        <div class="card" style="border: 1px solid var(--neon);">
+            <h3>Upload Video (Link)</h3>
+            <input type="text" id="vTitle" placeholder="Jina la Video">
+            <input type="text" id="vUrl" placeholder="Video URL (YouTube/Drive)">
+            <button class="btn" onclick="saveData('videos', {title: document.getElementById('vTitle').value, url: document.getElementById('vUrl').value})">HIFADHI VIDEO</button>
+        </div>
+        <div class="card" style="border: 1px solid #ffcc00;">
+            <h3>Upload Notes</h3>
+            <input type="text" id="nTitle" placeholder="Jina la Notes">
+            <textarea id="nContent" rows="3" placeholder="Maelezo..."></textarea>
+            <button class="btn" style="background:#ffcc00;" onclick="saveData('notes', {title: document.getElementById('nTitle').value, content: document.getElementById('nContent').value})">HIFADHI NOTES</button>
+        </div>
+        <button class="btn" style="background:white;" onclick="location.reload()">LOGOUT</button>
+    </section>
+</main>
+
+<div id="loginOverlay">
+    <input type="password" id="adminPass" placeholder="Admin Password">
+    <button class="btn" onclick="tryLogin()">INGIA</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAHNhUyFC7PlZGijkmYUnEc1GlEYJGHI40",
+        authDomain: "manyama2006-50664.firebaseapp.com",
+        projectId: "manyama2006-50664",
+        storageBucket: "manyama2006-50664.firebasestorage.app",
+        messagingSenderId: "749612577601",
+        appId: "1:749612577601:web:53295431132ddff30027c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const isAdmin = sessionStorage.getItem('isAdmin');
+
+    window.tryLogin = () => {
+        if(document.getElementById('adminPass').value === "dvary5050") {
+            sessionStorage.setItem('isAdmin', 'true');
+            location.reload();
+        } else { alert("Password Sio Sahihi!"); }
+    };
+
+    window.saveData = async (col, data) => {
+        if(!data.title) return alert("Jaza jina!");
+        await addDoc(collection(db, col), { ...data, createdAt: Date.now() });
+        location.reload();
+    };
+
+    window.deleteItem = async (col, id) => {
+        if(confirm("Futa hii kitu?")) {
+            await deleteDoc(doc(db, col, id));
+            location.reload();
+        }
+    };
+
+    // RENDER
+    onSnapshot(query(collection(db, "videos"), orderBy("createdAt", "desc")), (snap) => {
+        let html = "";
+        snap.forEach(d => { 
+            html += `<div class="card"><h3>▶ ${d.data().title}</h3><video src="${d.data().url}" controls></video>
+            ${isAdmin ? `<button class="del-btn" onclick="deleteItem('videos','${d.id}')">FUTA VIDEO</button>` : ''}</div>`; 
+        });
+        document.getElementById('videoList').innerHTML = html || "Hakuna video.";
+    });
+
+    onSnapshot(query(collection(db, "notes"), orderBy("createdAt", "desc")), (snap) => {
+        let html = "";
+        snap.forEach(d => { 
+            html += `<div class="card"><h3>📄 ${d.data().title}</h3><p>${d.data().content}</p>
+            ${isAdmin ? `<button class="del-btn" onclick="deleteItem('notes','${d.id}')">FUTA NOTE</button>` : ''}</div>`; 
+        });
+        document.getElementById('notesList').innerHTML = html || "Hakuna notes.";
+    });
+
+    if(isAdmin) document.getElementById('admin').style.display = 'block';
+</script>
+</body>
+</html>
+
