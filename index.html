@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>:: NULL_ACADEMY ::</title>
+    <style>
+        :root { --neon: #00f2ff; --bg: #0a0a0c; --card: #16161a; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; padding: 20px; }
+        .card { background: var(--card); border: 1px solid #333; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .btn { background: var(--neon); color: #000; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        input, textarea { width: 90%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+        video { width: 100%; border-radius: 8px; margin-top: 10px; }
+        #admin { display: none; }
+        #loginOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); padding: 40px; text-align: center; z-index: 100; }
+        #loginOverlay.active { display: block; }
+    </style>
+</head>
+<body>
+
+<header style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--neon); padding-bottom:10px;">
+    <h1>NULL_ACADEMY</h1>
+    <button class="btn" style="width:auto;" onclick="document.getElementById('loginOverlay').classList.add('active')">🔐 ADMIN</button>
+</header>
+
+<main>
+    <section id="student">
+        <h2>🎥 VIDEOS</h2>
+        <div id="videoList">Loading...</div>
+        <h2>📝 NOTES</h2>
+        <div id="notesList">Loading...</div>
+    </section>
+
+    <section id="admin" class="card">
+        <h2>⚙️ ADMIN DASHBOARD</h2>
+        
+        <div class="card" style="border: 1px solid var(--neon);">
+            <h3>Upload Video (Tumia Link)</h3>
+            <input type="text" id="vTitle" placeholder="Jina la Video">
+            <input type="text" id="vUrl" placeholder="Paste Video URL (YouTube/Drive)">
+            <button class="btn" onclick="saveVideo()">HIFADHI VIDEO</button>
+        </div>
+
+        <div class="card" style="border: 1px solid #ffcc00;">
+            <h3>Upload Notes</h3>
+            <input type="text" id="nTitle" placeholder="Jina la Notes">
+            <textarea id="nContent" rows="3" placeholder="Andika maelezo ya notes..."></textarea>
+            <button class="btn" style="background:#ffcc00;" onclick="saveNote()">HIFADHI NOTES</button>
+        </div>
+        <button class="btn" style="background:red; color:white;" onclick="location.reload()">LOGOUT</button>
+    </section>
+</main>
+
+<div id="loginOverlay">
+    <input type="password" id="adminPass" placeholder="Admin Password">
+    <button class="btn" onclick="tryLogin()">INGIA</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAHNhUyFC7PlZGijkmYUnEc1GlEYJGHI40",
+        authDomain: "manyama2006-50664.firebaseapp.com",
+        projectId: "manyama2006-50664",
+        storageBucket: "manyama2006-50664.firebasestorage.app",
+        messagingSenderId: "749612577601",
+        appId: "1:749612577601:web:53295431132ddff30027c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // LOGIN
+    window.tryLogin = () => {
+        if(document.getElementById('adminPass').value === "dvary5050") {
+            sessionStorage.setItem('isAdmin', 'true');
+            location.reload();
+        } else { alert("Password Sio Sahihi!"); }
+    };
+
+    // SAVE VIDEO URL
+    window.saveVideo = async () => {
+        const title = document.getElementById('vTitle').value;
+        const url = document.getElementById('vUrl').value;
+        if(!title || !url) return alert("Jaza jina na Link!");
+        await addDoc(collection(db, "videos"), { title, url, createdAt: Date.now() });
+        alert("Video imehifadhiwa!");
+        location.reload();
+    };
+
+    // SAVE NOTES
+    window.saveNote = async () => {
+        const title = document.getElementById('nTitle').value;
+        const content = document.getElementById('nContent').value;
+        if(!title || !content) return alert("Jaza jina na maelezo!");
+        await addDoc(collection(db, "notes"), { title, content, createdAt: Date.now() });
+        alert("Notes imehifadhiwa!");
+        location.reload();
+    };
+
+    // RENDER
+    onSnapshot(query(collection(db, "videos"), orderBy("createdAt", "desc")), (snap) => {
+        let html = "";
+        snap.forEach(d => { 
+            html += `<div class="card"><h3>▶ ${d.data().title}</h3><video src="${d.data().url}" controls></video></div>`; 
+        });
+        document.getElementById('videoList').innerHTML = html || "Hakuna video.";
+    });
+
+    onSnapshot(query(collection(db, "notes"), orderBy("createdAt", "desc")), (snap) => {
+        let html = "";
+        snap.forEach(d => { 
+            html += `<div class="card"><h3>📄 ${d.data().title}</h3><p>${d.data().content}</p></div>`; 
+        });
+        document.getElementById('notesList').innerHTML = html || "Hakuna notes.";
+    });
+
+    if(sessionStorage.getItem('isAdmin')) document.getElementById('admin').style.display = 'block';
+</script>
+</body>
+</html>
+
