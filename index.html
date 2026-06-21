@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>:: NULL_ACADEMY ::</title>
+    <style>
+        :root { --neon: #00f2ff; --bg: #0a0a0c; --card: #16161a; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; font-size: 18px; }
+        header { display: flex; justify-content: space-between; border-bottom: 2px solid var(--neon); padding-bottom: 15px; }
+        .card { background: var(--card); border: 1px solid #333; padding: 25px; border-radius: 15px; margin-bottom: 20px; }
+        .btn { background: var(--neon); color: #000; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        input, textarea { width: 95%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+        video { width: 100%; border-radius: 10px; margin-top: 10px; background: #000; }
+        #admin { display: none; }
+        #loginOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); padding: 50px; text-align: center; z-index: 100; }
+        #loginOverlay.active { display: block; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>NULL_ACADEMY</h1>
+    <nav>
+        <a href="https://whatsapp.com/channel/0029VbCRC9b5fM5cruU8PF2M" target="_blank" class="btn">📡 CHANNEL</a>
+        <button class="btn" onclick="document.getElementById('loginOverlay').classList.add('active')">🔐 ADMIN</button>
+    </nav>
+</header>
+
+<main>
+    <section id="student">
+        <h2>📁 VIDEO ARCHIVE</h2>
+        <div id="videoList">Loading...</div>
+        <h2>📝 NOTES ARCHIVE</h2>
+        <div id="notesList">Loading...</div>
+    </section>
+
+    <section id="admin" class="card">
+        <h2>⚙️ ADMIN DASHBOARD</h2>
+        <input type="text" id="videoTitle" placeholder="Jina la Video">
+        <input type="file" id="videoFile">
+        <button class="btn" onclick="uploadVideo()">UPLOAD VIDEO</button>
+        <hr>
+        <input type="text" id="noteTitle" placeholder="Jina la Notes">
+        <textarea id="noteContent" rows="5" placeholder="Andika notes hapa..."></textarea>
+        <button class="btn" onclick="uploadNote()">UPLOAD NOTES</button>
+        <br><br>
+        <button class="btn" onclick="logoutAdmin()" style="background:red">LOGOUT</button>
+    </section>
+</main>
+
+<div id="loginOverlay">
+    <input type="password" id="adminPass" placeholder="Ingiza Password ya Admin">
+    <button class="btn" onclick="tryLogin()">AUTHENTICATE</button>
+    <button class="btn" onclick="document.getElementById('loginOverlay').classList.remove('active')">CANCEL</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAHNhUyFC7PlZGijkmYUnEc1GlEYJGHI40",
+        authDomain: "manyama2006-50664.firebaseapp.com",
+        projectId: "manyama2006-50664",
+        storageBucket: "manyama2006-50664.firebasestorage.app",
+        messagingSenderId: "749612577601",
+        appId: "1:749612577601:web:53295431132ddff30027c0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // Login logic
+    window.tryLogin = () => {
+        if(document.getElementById('adminPass').value === "dvary5050") {
+            sessionStorage.setItem('isAdmin', 'true');
+            location.reload();
+        } else { alert("Password Sio Sahihi!"); }
+    };
+    window.logoutAdmin = () => { sessionStorage.removeItem('isAdmin'); location.reload(); };
+
+    // UPLOAD VIDEO
+    window.uploadVideo = async () => {
+        const file = document.getElementById('videoFile').files[0];
+        const title = document.getElementById('videoTitle').value;
+        if(!file || !title) return alert("Jaza Jina na Chagua Video!");
+        
+        const storageRef = ref(storage, 'videos/' + Date.now() + file.name);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        await addDoc(collection(db, "videos"), { title, url, createdAt: Date.now() });
+        alert("Video imepakiwa!");
+    };
+
+    // UPLOAD NOTE
+    window.uploadNote = async () => {
+        const title = document.getElementById('noteTitle').value;
+        const content = document.getElementById('noteContent').value;
+        if(!title || !content) return alert("Jaza Jina na Notes!");
+        await addDoc(collection(db, "notes"), { title, content, createdAt: Date.now() });
+        alert("Notes zimehifadhiwa!");
+    };
+
+    // RENDER DATA
+    onSnapshot(query(collection(db, "videos"), orderBy("createdAt", "desc")), (snap) => {
+        let html = "";
+        snap.forEach(d => { html += `<div class="card"><h3>▶ ${d.data().title}</h3><video src="${d.data().url}" controls></video></div>`; });
+        document.getElementById('videoList').innerHTML = html || "Hakuna video.";
+    });
+
+    onSnapshot(query(collection(db, "notes"), orderBy("createdAt", "desc")), (snap) => {
+        let html = "";
+        snap.forEach(d => { html += `<div class="card"><h3>📄 ${d.data().title}</h3><p>${d.data().content}</p></div>`; });
+        document.getElementById('notesList').innerHTML = html || "Hakuna notes.";
+    });
+
+    if(sessionStorage.getItem('isAdmin')) document.getElementById('admin').style.display = 'block';
+</script>
+
+</body>
+</html>
+
